@@ -14,14 +14,26 @@ class ImageNetDataset(Dataset):
         super(ImageNetDataset, self).__init__()
         self.transforms = transforms
         self.is_train = is_train
+        with open(path + '/train.txt', 'r') as f:
+            self.train_label_list = f.read().splitlines()
+        
+        with open(path + '/valid.txt', 'r') as f:
+            self.valid_label_list = f.read().splitlines()
 
         if is_train:
             self.data = glob.glob(path + '/train/**/*.JPEG')
             self.train_list = dict()
+            for data in self.data:
+                label = data.split(os.sep)[-2]
+                self.train_list[data] = self.train_label_list.index(label)
+
     
         else:
-            self.data = glob.glob(path + '/val/**/*.JPEG')
+            self.data = glob.glob(path + '/valid/**/*.JPEG')
             self.val_list = dict()
+            for data in self.data:
+                label = data.split(os.sep)[-2]
+                self.val_list[data] = self.valid_label_list.index(label)
 
     def __len__(self):
         return len(self.data)
@@ -52,7 +64,7 @@ class ImageNet(pl.LightningDataModule):
             num_workers=self.workers,
             persistent_workers=self.workers > 0,
             pin_memory=self.workers > 0,
-            collate_fn=imagenet_collate_fn,
+            #collate_fn=imagenet_collate_fn,
         )
 
     def val_dataloader(self):
@@ -61,7 +73,7 @@ class ImageNet(pl.LightningDataModule):
             num_workers=self.workers,
             persistent_workers=self.workers > 0,
             pin_memory=self.workers > 0,
-            collate_fn=imagenet_collate_fn,
+            #collate_fn=imagenet_collate_fn,
         )
 
 
@@ -80,13 +92,13 @@ if __name__ == '__main__':
         albumentations.pytorch.ToTensorV2()
     ])
 
-    loader = DataLoader(ImageNet(path='/mnt/YIS', transforms=train_transforms, is_train=True))
+    loader = DataLoader(ImageNetDataset(path='/mnt', transforms=train_transforms, is_train=True))
 
-    for batch, sample in enumerate(loader):
-        print('image : ', sample['image'])
-        print('label : ', sample['label'])
-        print('sample_id : ', sample['sample_id'])
-        print('on_gpu : ', sample['on_gpu'])
-        break
+    # for batch, sample in enumerate(loader):
+    #     print('image : ', sample['image'])
+    #     print('label : ', sample['label'])
+    #     print('sample_id : ', sample['sample_id'])
+    #     print('on_gpu : ', sample['on_gpu'])
+    #     break
     
     

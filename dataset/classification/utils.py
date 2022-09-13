@@ -1,5 +1,7 @@
 # Lib
 import cv2
+import glob
+import tqdm
 import torch
 import numpy as np
 
@@ -31,3 +33,19 @@ def imagenet_collate_fn(data):
         images = images.to(memory_format=torch.channel_last)
 
     return {"images": images, "label": labels, "sample_id": sample_id, "on_gpu": images.is_cuda}
+
+
+def create_annot(label_info, mode):
+    txt_path = os.getcwd() + f'/generator/{mode}.txt'
+    for label in tqdm(label_info, desc='Converting txt file'):
+        with open(txt_path, 'a') as f:
+            info = f'{label} \n'
+            f.write(info)
+
+
+if __name__ == '__main__':
+    train_label = [os.basename(file) for file in glob(os.getcwd() + '/imagenet-ini/train/*')]
+    val_label = [os.basename(file) for file in glob(os.getcwd() + '/imagenet-mini/val/*')]
+
+    create_annot(train_label, mode='train')
+    create_annot(valid_label, mode='val')
