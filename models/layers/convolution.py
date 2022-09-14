@@ -1,11 +1,8 @@
 import torch
 from torch import nn
 
-def getPadding(kernel_size, mode='same'):
-    if mode == 'same':
-        return (int(kernel_size -1) / 2), (int(kernel_size - 1) / 2)
-    else:
-        return 0
+def getPadding(kernel_size):
+    return (int((kernel_size - 1) / 2), (int((kernel_size - 1)/ 2)))
 
 
 class Conv2dBnAct(nn.Module):
@@ -22,4 +19,17 @@ class Conv2dBnAct(nn.Module):
         output = self.conv(input)
         output = self.bn(output)
         output = self.act(output)
+        return output
+
+
+class Conv2dBn(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size, stride=1, dilation=1, groups=1, padding_mode='zeros'):
+        super(Conv2dBn, self).__init__()
+        self.padding = getPadding(kernel_size)
+        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size, stride, self.padding, dilation, groups, False, padding_mode)
+        self.bn = nn.BatchNorm2d(out_channels)
+
+    def forward(self, input):
+        output = self.conv(input)
+        output = self.bn(output)
         return output
