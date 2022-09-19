@@ -1,13 +1,13 @@
 # Lib Load
 import os
-from tkinter import Image
 import cv2
 import glob
 import torch
 import pytorch_lightning as pl
+import numpy as np
 
 from torch.utils.data import Dataset, DataLoader
-from dataset.classification.utils import imagenet_collate_fn
+
 
 class ImageNetDataset(Dataset):
     def __init__(self, path, transforms, is_train):
@@ -24,7 +24,7 @@ class ImageNetDataset(Dataset):
             self.data = glob.glob(path + '/train/**/*.JPEG')
             self.train_list = dict()
             for data in self.data:
-                label = data.split(os.sep)[-2]
+                label = data.split(os.sep)[-2] + (' ')
                 self.train_list[data] = self.train_label_list.index(label)
 
     
@@ -32,7 +32,7 @@ class ImageNetDataset(Dataset):
             self.data = glob.glob(path + '/valid/**/*.JPEG')
             self.val_list = dict()
             for data in self.data:
-                label = data.split(os.sep)[-2]
+                label = data.split(os.sep)[-2] + (' ')
                 self.val_list[data] = self.valid_label_list.index(label)
 
     def __len__(self):
@@ -44,7 +44,7 @@ class ImageNetDataset(Dataset):
         if self.is_train:
             label = self.train_list[img_file]
         else:
-            label = self.val_list[os.path.basename(img_file)]
+            label = self.val_list[img_file]
         transformed = self.transforms(image=img)['image']
         return transformed, label
 
@@ -68,7 +68,7 @@ class ImageNet(pl.LightningDataModule):
         )
 
     def val_dataloader(self):
-        return DataLoader(ImageNetDataset(path=self.path, transofrms=self.val_transforms, is_train=False),
+        return DataLoader(ImageNetDataset(path=self.path, transforms=self.val_transforms, is_train=False),
             batch_size=self.batch_size,
             num_workers=self.workers,
             persistent_workers=self.workers > 0,
@@ -88,17 +88,16 @@ if __name__ == '__main__':
     train_transforms = albumentations.Compose([
         albumentations.HorizontalFlip(p=0.5),
         albumentations.ColorJitter(),
-        # albumentations.Normalize(0, 1),
+        albumentations.Normalize(0, 1),
+        albumentations.Resize(256, 256, always_apply=True),
         albumentations.pytorch.ToTensorV2()
     ])
 
     loader = DataLoader(ImageNetDataset(path='/mnt', transforms=train_transforms, is_train=True))
 
-    # for batch, sample in enumerate(loader):
-    #     print('image : ', sample['image'])
-    #     print('label : ', sample['label'])
-    #     print('sample_id : ', sample['sample_id'])
-    #     print('on_gpu : ', sample['on_gpu'])
-    #     break
-    
+    for batch, sample in enumerate(loader):
+        # print('image : ', sample['img'])
+        # print(sample['img'][0].shape)
+        # print('class : ', sample['class'])
+        pass
     

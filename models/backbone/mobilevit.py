@@ -54,7 +54,7 @@ class MobileViT(nn.Module):
 
         output = self.pool(output).view(-1, output.shape[1])
         output = self.fc(output)
-        return output
+        return {'pred' : output}
 
 
 def MobileViT_classification(in_channels, classes=1000, varient='s'):
